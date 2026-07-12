@@ -5,9 +5,12 @@ from openai import OpenAI
 from scraper import browser_session, fetch_website_links, fetch_website_contents
 
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
-openAI = OpenAI(api_key=api_key)
-
+GROQ_MODEL = "llama-3.3-70b-versatile"
+api_key = os.getenv("GROQ_API_KEY")
+openAI = OpenAI(
+    api_key=api_key,
+    base_url="https://api.groq.com/openai/v1",
+)
 
 def select_relevant_links(links):
     """Ask GPT to pick the links worth scraping (About/Careers/Blog etc.)."""
@@ -21,7 +24,7 @@ def select_relevant_links(links):
     )
 
     response = openAI.chat.completions.create(
-        model="gpt-4o-mini",
+        model=GROQ_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": "\n".join(links)},
@@ -67,7 +70,7 @@ def summarize_company(company_url, pages):
     )
 
     response = openAI.chat.completions.create(
-        model="gpt-4o-mini",
+        model=GROQ_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Company URL: {company_url}\n\n{combined}"},
