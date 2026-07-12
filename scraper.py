@@ -1,22 +1,30 @@
+from contextlib import contextmanager
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 
-def _render_page(url):
-    """Load a URL in a headless browser and return the fully-rendered HTML."""
+@contextmanager
+def browser_session():
+    """Launch one browser and reuse it for multiple page fetches."""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(url)
-        html = page.content()
+        yield browser
         browser.close()
+
+
+def _render_page(browser, url):
+    """Load a URL in the given browser and return the fully-rendered HTML."""
+    page = browser.new_page()
+    page.goto(url)
+    html = page.content()
+    page.close()
     return html
 
 
-def fetch_website_contents(url, char_limit=3000):
+def fetch_website_contents(browser, url, char_limit=3000):
     """Return the title + visible text of a page, truncated to char_limit."""
-    html = _render_page(url)
+    html = _render_page(browser, url)
     soup = BeautifulSoup(html, "html.parser")
 
     title = soup.title.string if soup.title else "No title found"
@@ -31,9 +39,9 @@ def fetch_website_contents(url, char_limit=3000):
     return (title + "\n\n" + text)[:char_limit]
 
 
-def fetch_website_links(url):
+def fetch_website_links(browser, url):
     """Return a de-duplicated list of absolute links found on a page."""
-    html = _render_page(url)
+    html = _render_page(browser, url)
     soup = BeautifulSoup(html, "html.parser")
 
     links = []
@@ -53,8 +61,9 @@ def fetch_website_links(url):
     return links
 
 
-# --- Manual test - run directly with: python scraper.py ---
+# --- Manual test — run directly with: python scraper.py ---
 if __name__ == "__main__":
-    links = fetch_website_links("https://kaylin-maharaj.co.za")
-    for link in links:
-        print(link)
+    with browser_session() as browser:
+        links = fetch_website_links(browser, "https://kaylin-maharaj.co.za")
+        for link in links:
+            print(link)

@@ -2,7 +2,7 @@ import os
 import json
 from dotenv import load_dotenv
 from openai import OpenAI
-from scraper import fetch_website_links, fetch_website_contents
+from scraper import browser_session, fetch_website_links, fetch_website_contents
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -14,7 +14,7 @@ def select_relevant_links(links):
     system_prompt = (
         "You are given a list of links found on a company's homepage. "
         "Select only the links useful for researching the company before "
-        "a job interview - things like About, Careers, Team, Blog, News, "
+        "a job interview — things like About, Careers, Team, Blog, News, "
         "or Product pages. Ignore social media, legal pages, PDFs, and "
         "anything unrelated. Respond with ONLY a JSON array of URLs, "
         "nothing else. Pick at most 4."
@@ -40,11 +40,11 @@ def _clean_json_response(raw):
     return raw
 
 
-def gather_page_contents(links):
-    """Scrape each link's text content, keyed by URL."""
+def gather_page_contents(browser, links):
+    """Scrape each link's text content, keyed by URL, using one shared browser."""
     pages = {}
     for link in links:
-        pages[link] = fetch_website_contents(link)
+        pages[link] = fetch_website_contents(browser, link)
     return pages
 
 
@@ -62,7 +62,7 @@ def summarize_company(company_url, pages):
         "## Tech Stack (if mentioned or inferable)\n"
         "## Recent News\n"
         "## Culture / Values\n\n"
-        "Be factual - only state things supported by the content. "
+        "Be factual — only state things supported by the content. "
         "If a section has no supporting info, say 'Not enough information found.'"
     )
 
@@ -79,16 +79,24 @@ def summarize_company(company_url, pages):
 
 def research_company(homepage_url):
     """Run the full pipeline: fetch links, filter, scrape, summarize."""
-    links = fetch_website_links(homepage_url)
-    selected = select_relevant_links(links)
+    try:
+        with browser_session() as browser:
+            links = fetch_website_links(browser, homepage_url)
+            selected = select_relevant_links(links)
 
-    if homepage_url not in selected:
-        selected.append(homepage_url)
+            if homepage_url not in selected:
+                selected.append(homepage_url)
 
-    pages = gather_page_contents(selected)
+            pages = gather_page_contents(browser, selected)
+    except Exception as e:
+        return (
+            f"Couldn't research {homepage_url}. It may be blocking automated "
+            f"access, or the URL may be invalid.\n\nDetails: {e}"
+        )
+
     return summarize_company(homepage_url, pages)
 
 
-# --- Manual test - run directly with: python summarizer.py ---
+# --- Manual test — run directly with: python summarizer.py ---
 if __name__ == "__main__":
     print(research_company("https://entelect.co.za/"))
