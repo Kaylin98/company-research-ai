@@ -77,9 +77,8 @@ def summarize_company(company_url, pages):
     return response.choices[0].message.content
 
 
-# --- Manual test - run directly with: python summarizer.py ---
-if __name__ == "__main__":
-    homepage_url = "https://entelect.co.za/"
+def research_company(homepage_url):
+    """Run the full pipeline: fetch links, filter, scrape, summarize."""
     links = fetch_website_links(homepage_url)
     selected = select_relevant_links(links)
 
@@ -87,4 +86,9 @@ if __name__ == "__main__":
         selected.append(homepage_url)
 
     pages = gather_page_contents(selected)
-    print(summarize_company(homepage_url, pages))
+    return summarize_company(homepage_url, pages)
+
+
+# --- Manual test - run directly with: python summarizer.py ---
+if __name__ == "__main__":
+    print(research_company("https://entelect.co.za/"))
