@@ -29,7 +29,8 @@ company twice doesn't repeat the scrape or re-call the API.
 
 ## Demo
 
-A short demo video is on my portfolio: [kaylin-maharaj.co.za](https://kaylin-maharaj.co.za)
+- Live app: [company-research-ai-srjjkuerrxhruxe5woaw56.streamlit.app](https://company-research-ai-srjjkuerrxhruxe5woaw56.streamlit.app/)
+- Video walkthrough on my portfolio: [kaylin-maharaj.co.za](https://kaylin-maharaj.co.za)
 
 ## Tech stack
 
@@ -80,6 +81,10 @@ requirements.txt
 - Some sites (e.g. openai.com) block automated browsers with services like
   Cloudflare — turns out an AI company is quite good at detecting robots.
   This is a personal/portfolio project, not built to bypass bot-detection.
+- A handful of sites that scrape fine locally fail when hosted (e.g. Notion,
+  OfferZen) — likely due to bot-detection flagging traffic from cloud
+  datacenter IP ranges, or the hosted server's tighter timeout window.
+  Same underlying category of issue as the Cloudflare case above.
 - Currently no automated tests — each module has a manual test block
   (`if __name__ == "__main__":`) for quick standalone checks.
 - Possible future improvements: parallelize page scraping (currently
