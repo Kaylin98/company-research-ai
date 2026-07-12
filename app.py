@@ -1,3 +1,5 @@
+import subprocess
+subprocess.run(["playwright", "install", "chromium"])
 import streamlit as st
 from summarizer import research_company
 

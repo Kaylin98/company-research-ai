@@ -3,10 +3,14 @@ import json
 from dotenv import load_dotenv
 from openai import OpenAI
 from scraper import browser_session, fetch_website_links, fetch_website_contents
+import streamlit as st
 
 load_dotenv()
+
 GROQ_MODEL = "llama-3.3-70b-versatile"
-api_key = os.getenv("GROQ_API_KEY")
+
+api_key = os.getenv("GROQ_API_KEY") or st.secrets.get("GROQ_API_KEY")
+
 openAI = OpenAI(
     api_key=api_key,
     base_url="https://api.groq.com/openai/v1",
